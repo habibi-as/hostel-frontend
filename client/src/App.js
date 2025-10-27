@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 
 // Pages
@@ -42,7 +42,6 @@ import StudentFeedback from './pages/student/StudentFeedback';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
-import LoadingSpinner from './components/LoadingSpinner';
 
 function App() {
   return (
@@ -74,6 +73,7 @@ function App() {
                 },
               }}
             />
+
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<LandingPage />} />
@@ -83,137 +83,52 @@ function App() {
               <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* Admin Routes */}
-              <Route path="/admin" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/students" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminStudents />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/rooms" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminRooms />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/fees" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminFees />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/complaints" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminComplaints />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/notices" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminNotices />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/lost-found" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminLostFound />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/chat" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminChat />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/attendance" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminAttendance />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/reports" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminReports />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/profile" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminProfile />
-                </ProtectedRoute>
-              } />
+              <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin/students" element={<ProtectedRoute allowedRoles={['admin']}><AdminStudents /></ProtectedRoute>} />
+              <Route path="/admin/rooms" element={<ProtectedRoute allowedRoles={['admin']}><AdminRooms /></ProtectedRoute>} />
+              <Route path="/admin/fees" element={<ProtectedRoute allowedRoles={['admin']}><AdminFees /></ProtectedRoute>} />
+              <Route path="/admin/complaints" element={<ProtectedRoute allowedRoles={['admin']}><AdminComplaints /></ProtectedRoute>} />
+              <Route path="/admin/notices" element={<ProtectedRoute allowedRoles={['admin']}><AdminNotices /></ProtectedRoute>} />
+              <Route path="/admin/lost-found" element={<ProtectedRoute allowedRoles={['admin']}><AdminLostFound /></ProtectedRoute>} />
+              <Route path="/admin/chat" element={<ProtectedRoute allowedRoles={['admin']}><AdminChat /></ProtectedRoute>} />
+              <Route path="/admin/attendance" element={<ProtectedRoute allowedRoles={['admin']}><AdminAttendance /></ProtectedRoute>} />
+              <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={['admin']}><AdminReports /></ProtectedRoute>} />
+              <Route path="/admin/profile" element={<ProtectedRoute allowedRoles={['admin']}><AdminProfile /></ProtectedRoute>} />
 
               {/* Student Routes */}
-              <Route path="/student" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/profile" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentProfile />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/attendance" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentAttendance />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/fees" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentFees />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/notices" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentNotices />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/complaints" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentComplaints />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/lost-found" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentLostFound />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/chat" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentChat />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/food-menu" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentFoodMenu />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/laundry" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentLaundry />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/visitors" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentVisitors />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/maintenance" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentMaintenance />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/events" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentEvents />
-                </ProtectedRoute>
-              } />
-              <Route path="/student/feedback" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <StudentFeedback />
-                </ProtectedRoute>
-              } />
+              <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
+              <Route path="/student/profile" element={<ProtectedRoute allowedRoles={['student']}><StudentProfile /></ProtectedRoute>} />
+              <Route path="/student/attendance" element={<ProtectedRoute allowedRoles={['student']}><StudentAttendance /></ProtectedRoute>} />
+              <Route path="/student/fees" element={<ProtectedRoute allowedRoles={['student']}><StudentFees /></ProtectedRoute>} />
+              <Route path="/student/notices" element={<ProtectedRoute allowedRoles={['student']}><StudentNotices /></ProtectedRoute>} />
+              <Route path="/student/complaints" element={<ProtectedRoute allowedRoles={['student']}><StudentComplaints /></ProtectedRoute>} />
+              <Route path="/student/lost-found" element={<ProtectedRoute allowedRoles={['student']}><StudentLostFound /></ProtectedRoute>} />
+              <Route path="/student/chat" element={<ProtectedRoute allowedRoles={['student']}><StudentChat /></ProtectedRoute>} />
+              <Route path="/student/food-menu" element={<ProtectedRoute allowedRoles={['student']}><StudentFoodMenu /></ProtectedRoute>} />
+              <Route path="/student/laundry" element={<ProtectedRoute allowedRoles={['student']}><StudentLaundry /></ProtectedRoute>} />
+              <Route path="/student/visitors" element={<ProtectedRoute allowedRoles={['student']}><StudentVisitors /></ProtectedRoute>} />
+              <Route path="/student/maintenance" element={<ProtectedRoute allowedRoles={['student']}><StudentMaintenance /></ProtectedRoute>} />
+              <Route path="/student/events" element={<ProtectedRoute allowedRoles={['student']}><StudentEvents /></ProtectedRoute>} />
+              <Route path="/student/feedback" element={<ProtectedRoute allowedRoles={['student']}><StudentFeedback /></ProtectedRoute>} />
 
               {/* Catch all route */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+
+            {/* 🌟 Footer Section */}
+            <footer style={{
+              textAlign: 'center',
+              padding: '12px',
+              backgroundColor: '#0f0f0f',
+              color: '#bbb',
+              fontSize: '14px',
+              letterSpacing: '0.6px',
+              marginTop: '30px',
+              boxShadow: '0 -2px 10px rgba(0,0,0,0.3)'
+            }}>
+              © {new Date().getFullYear()} Made with ❤️ by <strong style={{ color: '#4ade80' }}>Asurax Studio</strong>
+            </footer>
+
           </div>
         </Router>
       </AuthProvider>
