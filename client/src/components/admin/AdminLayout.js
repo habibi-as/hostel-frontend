@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; // ✅ keep only useNavigate
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import AdminSidebar from './AdminSidebar';
 import AdminNavbar from './AdminNavbar';
-import { FaTimes } from 'react-icons/fa';
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
   const { darkMode } = useTheme();
-  const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // ✅ keep navigate only
 
   const handleLogout = () => {
     logout();
@@ -20,7 +18,6 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 lg:hidden"
@@ -30,7 +27,6 @@ const AdminLayout = ({ children }) => {
         </div>
       )}
 
-      {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -39,16 +35,12 @@ const AdminLayout = ({ children }) => {
         <AdminSidebar onClose={() => setSidebarOpen(false)} />
       </div>
 
-      {/* Main content */}
       <div className="lg:ml-64 flex flex-col min-h-screen">
-        {/* Top navbar */}
         <AdminNavbar
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
           user={user}
           onLogout={handleLogout}
         />
-
-        {/* Page content */}
         <main className="flex-1 p-6">{children}</main>
       </div>
     </div>
