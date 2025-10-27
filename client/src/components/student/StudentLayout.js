@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import StudentSidebar from './StudentSidebar';
 import StudentNavbar from './StudentNavbar';
-import { FaBars, FaTimes } from 'react-icons/fa';
 
 const StudentLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
   const { darkMode } = useTheme();
-  const location = useLocation();
   const navigate = useNavigate();
 
   const handleLogout = () => {
