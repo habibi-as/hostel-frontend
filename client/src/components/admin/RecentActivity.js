@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { FaUser, FaExclamationTriangle, FaDollarSign, FaBullhorn } from 'react-icons/fa';
 
 const RecentActivity = () => {
