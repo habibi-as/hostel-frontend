@@ -260,8 +260,8 @@ const LandingPage = () => {
             <div>
               <h4 className="text-lg font-semibold mb-4">Support</h4>
               <ul className="space-y-2">
-                <li><span className="text-gray-400">Email: support@hostelhub.com</span></li>
-                <li><span className="text-gray-400">Phone: +91-XXXX-XXXX</span></li>
+                <li><span className="text-gray-400">Email: asurax1983@gmail.com</span></li>
+                <li><span className="text-gray-400">Phone: +91-9120972301</span></li>
                 <li><span className="text-gray-400">24/7 Support Available</span></li>
               </ul>
             </div>
@@ -295,4 +295,5 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
+
 export default LandingPage;
