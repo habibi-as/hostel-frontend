@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
 import { 
   FaBars, 
   FaBell, 
   FaUser, 
   FaCog, 
   FaSignOutAlt,
-  FaChevronDown
+  FaChevronDown,
+  FaMoon,
+  FaSun
 } from 'react-icons/fa';
 
 const StudentNavbar = ({ onMenuClick, user, onLogout }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem('theme') === 'dark'
+  );
+
+  // Toggle theme and save in localStorage
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
@@ -30,6 +45,15 @@ const StudentNavbar = ({ onMenuClick, user, onLogout }) => {
 
         {/* Right side */}
         <div className="flex items-center space-x-4">
+          {/* Dark/Light Mode Toggle */}
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+            title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {darkMode ? <FaSun className="w-5 h-5 text-yellow-400" /> : <FaMoon className="w-5 h-5" />}
+          </button>
+
           {/* Notifications */}
           <button className="relative p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
             <FaBell className="w-5 h-5" />
@@ -42,9 +66,9 @@ const StudentNavbar = ({ onMenuClick, user, onLogout }) => {
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
-                  {user?.name?.charAt(0) || 'S'}
+                  {user?.name?.charAt(0)?.toUpperCase() || 'S'}
                 </span>
               </div>
               <div className="hidden md:block text-left">
