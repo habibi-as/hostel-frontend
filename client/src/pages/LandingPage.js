@@ -52,8 +52,8 @@ const LandingPage = () => {
 
   const testimonials = [
     {
-      name: "Rajesh Kumar",
-      batch: "2023 Batch",
+      name: "prachi",
+      batch: "2024 Batch",
       rating: 5,
       comment: "Excellent facilities and great management. The hostel provides everything a student needs."
     },
@@ -79,7 +79,7 @@ const LandingPage = () => {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold gradient-text">HostelHub</h1>
+                <h1 className="text-2xl font-bold gradient-text">Asurax_hostel</h1>
               </div>
             </div>
             <div className="flex items-center space-x-4">
