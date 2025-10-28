@@ -1,29 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  FaBars, 
-  FaBell, 
-  FaUser, 
-  FaCog, 
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import {
+  FaBars,
+  FaBell,
+  FaUser,
+  FaCog,
   FaSignOutAlt,
   FaChevronDown,
   FaMoon,
-  FaSun
-} from 'react-icons/fa';
+  FaSun,
+} from "react-icons/fa";
 
 const StudentNavbar = ({ onMenuClick, user, onLogout }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [darkMode, setDarkMode] = useState(
-    localStorage.getItem('theme') === 'dark'
+    localStorage.getItem("theme") === "dark"
   );
 
   // Toggle theme and save in localStorage
   useEffect(() => {
     if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
     } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
     }
   }, [darkMode]);
 
@@ -51,7 +52,11 @@ const StudentNavbar = ({ onMenuClick, user, onLogout }) => {
             className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
             title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
           >
-            {darkMode ? <FaSun className="w-5 h-5 text-yellow-400" /> : <FaMoon className="w-5 h-5" />}
+            {darkMode ? (
+              <FaSun className="w-5 h-5 text-yellow-400" />
+            ) : (
+              <FaMoon className="w-5 h-5" />
+            )}
           </button>
 
           {/* Notifications */}
@@ -68,15 +73,15 @@ const StudentNavbar = ({ onMenuClick, user, onLogout }) => {
             >
               <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
-                  {user?.name?.charAt(0)?.toUpperCase() || 'S'}
+                  {user?.name?.charAt(0)?.toUpperCase() || "S"}
                 </span>
               </div>
               <div className="hidden md:block text-left">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {user?.name || 'Student'}
+                  {user?.name || "Student"}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {user?.batch || 'Batch'} • Room {user?.room_no || 'N/A'}
+                  {user?.batch || "Batch"} • Room {user?.room_no || "N/A"}
                 </p>
               </div>
               <FaChevronDown className="w-3 h-3 text-gray-400" />
@@ -87,26 +92,26 @@ const StudentNavbar = ({ onMenuClick, user, onLogout }) => {
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
                 <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {user?.name || 'Student'}
+                    {user?.name || "Student"}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {user?.email || 'student@hostel.com'}
+                    {user?.email || "student@hostel.com"}
                   </p>
                 </div>
-                <a
-                  href="#"
+                <Link
+                  to="/student/profile"
                   className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <FaUser className="mr-3 w-4 h-4" />
                   Profile
-                </a>
-                <a
-                  href="#"
+                </Link>
+                <Link
+                  to="/student/settings"
                   className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <FaCog className="mr-3 w-4 h-4" />
                   Settings
-                </a>
+                </Link>
                 <button
                   onClick={onLogout}
                   className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
