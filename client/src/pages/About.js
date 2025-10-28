@@ -8,10 +8,10 @@ export default function About() {
         About Our Hostel Management System 🏠
       </h1>
       <p className="max-w-2xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-        This system is designed to simplify hostel administration for both
-        students and administrators. From managing rooms, fees, and attendance
-        to handling complaints and events — everything is centralized in one
-        easy-to-use dashboard.
+        Our Hostel Management System is built to make hostel operations easier,
+        faster, and more organized. It allows admins to manage rooms, fees,
+        attendance, and complaints — all in one central dashboard. Students can
+        easily access their details, submit issues, and stay updated on events.
       </p>
       <div className="flex space-x-4">
         <Link
