@@ -1,7 +1,7 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import API from "../utils/api"; // ✅ Using centralized API config
+import API from "../utils/api"; // ✅ centralized axios instance
 
 const AuthContext = createContext();
 
@@ -18,13 +18,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem("token"));
 
-  // ✅ Fetch user when app starts or token changes
+  // ✅ Fetch user when token changes
   useEffect(() => {
     const checkAuth = async () => {
       if (token) {
         try {
-          const response = await API.get("/auth/me");
-          setUser(response.data.data);
+          const res = await API.get("/auth/profile", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setUser(res.data.user);
         } catch (error) {
           console.error("Auth check failed:", error);
           logout();
@@ -32,20 +34,19 @@ export const AuthProvider = ({ children }) => {
       }
       setLoading(false);
     };
-
     checkAuth();
   }, [token]);
 
-  // ✅ Login
+  // ✅ Login (aligned with backend)
   const login = async (email, password) => {
     try {
       setLoading(true);
-      const response = await API.post("/auth/login", { email, password });
+      const res = await API.post("/auth/login", { email, password });
 
-      const { user: userData, token: userToken } = response.data.data;
+      const { token: jwt, user: userData } = res.data;
       setUser(userData);
-      setToken(userToken);
-      localStorage.setItem("token", userToken);
+      setToken(jwt);
+      localStorage.setItem("token", jwt);
 
       toast.success("Login successful!");
       return { success: true };
@@ -58,18 +59,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ Register
+  // ✅ Register (aligned with backend)
   const register = async (userData) => {
     try {
       setLoading(true);
-      const response = await API.post("/auth/register", userData);
+      const res = await API.post("/auth/register", userData);
 
-      const { user: newUser, token: userToken } = response.data.data;
-      setUser(newUser);
-      setToken(userToken);
-      localStorage.setItem("token", userToken);
-
-      toast.success("Registration successful!");
+      toast.success(res.data.message || "Registration successful!");
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.message || "Registration failed";
@@ -93,18 +89,20 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       const formData = new FormData();
-
       Object.keys(profileData).forEach((key) => {
         if (profileData[key] !== null && profileData[key] !== undefined) {
           formData.append(key, profileData[key]);
         }
       });
 
-      await API.put("/auth/profile", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const res = await API.put("/auth/profile", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
       });
 
-      setUser((prev) => ({ ...prev, ...profileData }));
+      setUser((prev) => ({ ...prev, ...res.data.user }));
       toast.success("Profile updated successfully!");
       return { success: true };
     } catch (error) {
@@ -120,7 +118,11 @@ export const AuthProvider = ({ children }) => {
   const changePassword = async (currentPassword, newPassword) => {
     try {
       setLoading(true);
-      await API.put("/auth/change-password", { currentPassword, newPassword });
+      await API.put(
+        "/auth/change-password",
+        { currentPassword, newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
       toast.success("Password changed successfully!");
       return { success: true };
@@ -150,10 +152,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ✅ Reset Password
-  const resetPassword = async (token, newPassword) => {
+  const resetPassword = async (tokenParam, newPassword) => {
     try {
       setLoading(true);
-      await API.post("/auth/reset-password", { token, newPassword });
+      await API.post("/auth/reset-password", { token: tokenParam, newPassword });
       toast.success("Password reset successfully!");
       return { success: true };
     } catch (error) {
