@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://hostel-backend-asurax.onrender.com/api",
+  baseURL: "https://hostel-bobh.onrender.com/api",
   withCredentials: true,
 });
 
