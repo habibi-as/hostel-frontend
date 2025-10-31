@@ -12,33 +12,26 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  
-  const { login, loading, isAuthenticated } = useAuth();
+
+  const { login, loading, user } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || (isAuthenticated?.role === 'admin' ? '/admin' : '/student');
-
+  // Determine redirect path based on role
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate(from, { replace: true });
+    if (user) {
+      if (user.role === 'admin') navigate('/admin', { replace: true });
+      else navigate('/student', { replace: true });
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    // Clear error when user starts typing
+    setFormData(prev => ({ ...prev, [name]: value }));
+
     if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
@@ -61,17 +54,13 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+
+    if (!validateForm()) return;
 
     const result = await login(formData.email, formData.password);
-    
+
     if (result.success) {
-      const userRole = result.user?.role || 'student';
-      const redirectPath = userRole === 'admin' ? '/admin' : '/student';
-      navigate(redirectPath, { replace: true });
+      // Role-based redirect handled by useEffect
     }
   };
 
@@ -100,9 +89,7 @@ const Login = () => {
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-xl rounded-lg p-8`}>
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="label">
-                Email Address
-              </label>
+              <label htmlFor="email" className="label">Email Address</label>
               <input
                 id="email"
                 name="email"
@@ -114,15 +101,11 @@ const Login = () => {
                 className={`input mt-1 ${errors.email ? 'border-red-500' : ''}`}
                 placeholder="Enter your email"
               />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
+              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
             </div>
 
             <div>
-              <label htmlFor="password" className="label">
-                Password
-              </label>
+              <label htmlFor="password" className="label">Password</label>
               <div className="relative mt-1">
                 <input
                   id="password"
@@ -147,29 +130,18 @@ const Login = () => {
                   )}
                 </button>
               </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
+              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
+                <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
                   Remember me
                 </label>
               </div>
-
               <div className="text-sm">
-                <Link
-                  to="/forgot-password"
-                  className="font-medium text-primary-600 hover:text-primary-500"
-                >
+                <Link to="/forgot-password" className="font-medium text-primary-600 hover:text-primary-500">
                   Forgot your password?
                 </Link>
               </div>
@@ -195,10 +167,7 @@ const Login = () => {
             <div className="text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Don't have an account?{' '}
-                <Link
-                  to="/register"
-                  className="font-medium text-primary-600 hover:text-primary-500"
-                >
+                <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
                   Sign up here
                 </Link>
               </p>
@@ -208,9 +177,7 @@ const Login = () => {
 
         {/* Demo Credentials */}
         <div className={`${darkMode ? 'bg-gray-800' : 'bg-blue-50'} rounded-lg p-4`}>
-          <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-            Demo Credentials:
-          </h3>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Demo Credentials:</h3>
           <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
             <p><strong>Admin:</strong> admin@hostel.com / password</p>
             <p><strong>Student:</strong> student@hostel.com / password</p>
