@@ -24,7 +24,7 @@ import AdminChat from './pages/admin/AdminChat';
 import AdminAttendance from './pages/admin/AdminAttendance';
 import AdminReports from './pages/admin/AdminReports';
 import AdminProfile from './pages/admin/AdminProfile';
-import VisitorsPage from "./pages/Admin/VisitorsPage";
+import VisitorsPage from "./pages/admin/VisitorsPage";
 
 
 // Student Pages
