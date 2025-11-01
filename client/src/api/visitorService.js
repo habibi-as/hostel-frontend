@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/visitors`;
+// ✅ For Create React App (CRA), use process.env.REACT_APP_ prefix
+const API_URL = `${process.env.REACT_APP_API_URL || "http://localhost:5000"}/api/visitors`;
 
 export const getVisitors = async (token) => {
   const res = await axios.get(API_URL, {
@@ -17,9 +18,13 @@ export const addVisitor = async (token, data) => {
 };
 
 export const checkoutVisitor = async (token, id) => {
-  const res = await axios.put(`${API_URL}/${id}/checkout`, {}, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await axios.put(
+    `${API_URL}/${id}/checkout`,
+    {},
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
   return res.data.data;
 };
 
