@@ -12,23 +12,34 @@ const AdminAttendance = () => {
     status: "",
   });
 
-  // ✅ Fetch attendance from backend
+  // ✅ Fetch attendance records from backend
   const fetchAttendance = async () => {
     try {
       setLoading(true);
       const query = new URLSearchParams(filters).toString();
-      const res = await API.get(`/api/attendance?${query}`);
-      setAttendance(res.data.data || []);
+
+      // ✅ FIXED: Removed extra "/api" prefix
+      const res = await API.get(`/attendance?${query}`);
+
+      if (res.data?.success) {
+        setAttendance(res.data.data || []);
+      } else {
+        toast.error(res.data.message || "Failed to load attendance data");
+      }
     } catch (error) {
-      console.error("Fetch attendance error:", error);
-      toast.error("Failed to fetch attendance data");
+      console.error("❌ Fetch attendance error:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to fetch attendance data"
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ Initial load
   useEffect(() => {
     fetchAttendance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ✅ Handle filter change
@@ -116,12 +127,14 @@ const AdminAttendance = () => {
                     className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
                   >
                     <td className="p-2">
-                      {new Date(a.date).toLocaleDateString()}
+                      {a.date
+                        ? new Date(a.date).toLocaleDateString()
+                        : "N/A"}
                     </td>
                     <td className="p-2">{a.user?.name || "N/A"}</td>
                     <td className="p-2">{a.user?.batch || "N/A"}</td>
                     <td className="p-2">{a.user?.room_no || "N/A"}</td>
-                    <td className="p-2 capitalize">{a.status}</td>
+                    <td className="p-2 capitalize">{a.status || "N/A"}</td>
                     <td className="p-2">{a.checkIn || "—"}</td>
                     <td className="p-2">{a.checkOut || "—"}</td>
                   </tr>
