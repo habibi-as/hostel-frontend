@@ -26,24 +26,34 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
+  // ✅ Fetch Admin Dashboard stats from backend
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await API.get("/api/users/stats/dashboard");
-      setStats(response.data.data);
+
+      // ✅ FIXED: Removed duplicate `/api`
+      const response = await API.get("/users/stats/dashboard");
+
+      if (response.data?.success) {
+        setStats(response.data.data);
+      } else {
+        toast.error(response.data?.message || "Failed to fetch dashboard data");
+        setError("Unable to load dashboard data");
+      }
     } catch (err) {
-      console.error("Error fetching dashboard data:", err);
-      toast.error("Failed to load dashboard data");
+      console.error("❌ Error fetching dashboard data:", err);
+      toast.error(err.response?.data?.message || "Failed to load dashboard data");
       setError("Unable to fetch data from the server");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  // ✅ Show loader while fetching
   if (loading) {
     return (
       <AdminLayout>
@@ -54,6 +64,7 @@ const AdminDashboard = () => {
     );
   }
 
+  // ✅ Error state
   if (error) {
     return (
       <AdminLayout>
@@ -62,7 +73,7 @@ const AdminDashboard = () => {
             <p className="text-red-600 mb-4">{error}</p>
             <button
               onClick={fetchDashboardData}
-              className="btn btn-primary px-4 py-2 rounded-md"
+              className="btn bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
             >
               Retry
             </button>
@@ -99,7 +110,7 @@ const AdminDashboard = () => {
     },
     {
       title: "Fees Collected",
-      value: `₹${stats?.feesCollected || 0}`,
+      value: `₹${stats?.feesCollected?.toLocaleString() || 0}`,
       icon: <FaDollarSign className="w-8 h-8" />,
       color: "green",
       change: "+15%",
@@ -110,7 +121,7 @@ const AdminDashboard = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Welcome Section */}
+        {/* 🌟 Welcome Section */}
         <div className="bg-gradient-to-r from-primary-600 to-gold-600 rounded-lg p-6 text-white">
           <h1 className="text-3xl font-bold mb-2">
             Welcome back, {user?.name || "Admin"}!
@@ -120,7 +131,7 @@ const AdminDashboard = () => {
           </p>
         </div>
 
-        {/* Stats Cards */}
+        {/* 📊 Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {statsCards.map((card, index) => (
             <StatsCard
@@ -135,7 +146,7 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        {/* Charts and Quick Actions */}
+        {/* 📈 Charts + Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <ChartsSection />
@@ -146,8 +157,9 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Additional Info Cards */}
+        {/* 🧠 Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Monthly Overview */}
           <div className="card">
             <div className="card-header">
               <h3 className="card-title flex items-center">
@@ -157,22 +169,33 @@ const AdminDashboard = () => {
             </div>
             <div className="card-content space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-gray-600 dark:text-gray-400">New Students</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  New Students
+                </span>
                 <span className="font-semibold text-green-600">+24</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600 dark:text-gray-400">Room Occupancy</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Room Occupancy
+                </span>
                 <span className="font-semibold text-blue-600">
-                  {Math.round((stats?.occupiedRooms / stats?.totalRooms) * 100) || 0}%
+                  {stats?.totalRooms
+                    ? `${Math.round(
+                        (stats?.occupiedRooms / stats?.totalRooms) * 100
+                      )}%`
+                    : "0%"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600 dark:text-gray-400">Satisfaction Rate</span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  Satisfaction Rate
+                </span>
                 <span className="font-semibold text-gold-600">92%</span>
               </div>
             </div>
           </div>
 
+          {/* Notifications */}
           <div className="card">
             <div className="card-header">
               <h3 className="card-title flex items-center">
@@ -193,6 +216,7 @@ const AdminDashboard = () => {
             </div>
           </div>
 
+          {/* Quick Stats */}
           <div className="card">
             <div className="card-header">
               <h3 className="card-title flex items-center">
@@ -203,15 +227,21 @@ const AdminDashboard = () => {
             <div className="card-content space-y-4 text-center">
               <div>
                 <div className="text-2xl font-bold text-primary-600">98%</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">System Uptime</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  System Uptime
+                </div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-green-600">4.8/5</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">User Rating</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  User Rating
+                </div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-gold-600">24/7</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Support</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Support
+                </div>
               </div>
             </div>
           </div>
