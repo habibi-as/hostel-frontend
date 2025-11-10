@@ -1,15 +1,23 @@
+// src/components/ProtectedRoute.js
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import LoadingSpinner from "./LoadingSpinner";
 
 const ProtectedRoute = ({ children, role }) => {
   const { user, loading, isAuthenticated } = useAuth();
   const location = useLocation();
 
-  // ⏳ Wait for AuthContext to finish checking token
-  if (loading) return null;
+  // ⏳ While verifying auth token — show spinner instead of blank page
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
-  // 🚫 Not logged in → send to login
+  // 🚫 Not logged in → redirect to login (save intended route)
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
@@ -18,9 +26,9 @@ const ProtectedRoute = ({ children, role }) => {
   if (role && user?.role !== role) {
     const redirectPath =
       user?.role === "admin"
-        ? "/admin/dashboard"
+        ? "/admin"
         : user?.role === "student"
-        ? "/student/dashboard"
+        ? "/student"
         : "/";
     return <Navigate to={redirectPath} replace />;
   }
@@ -30,4 +38,5 @@ const ProtectedRoute = ({ children, role }) => {
 };
 
 export default ProtectedRoute;
+
 
