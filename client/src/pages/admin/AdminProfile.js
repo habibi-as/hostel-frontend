@@ -7,12 +7,21 @@ const AdminProfile = () => {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // ✅ Fetch Admin Profile
   const fetchProfile = async () => {
     try {
-      const res = await API.get("/api/auth/verify");
-      setAdmin(res.data.user);
+      setLoading(true);
+      // ✅ FIXED: removed duplicate `/api`
+      const res = await API.get("/auth/verify");
+
+      if (res.data?.success && res.data?.user) {
+        setAdmin(res.data.user);
+      } else {
+        toast.error(res.data?.message || "Failed to load admin profile");
+      }
     } catch (err) {
-      toast.error("Failed to fetch profile");
+      console.error("❌ Profile fetch error:", err);
+      toast.error(err.response?.data?.message || "Failed to fetch profile");
     } finally {
       setLoading(false);
     }
@@ -25,32 +34,40 @@ const AdminProfile = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
+        {/* Page Title */}
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Admin Profile
         </h1>
 
+        {/* Profile Card */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           {loading ? (
-            <p>Loading...</p>
+            <p className="text-gray-500 text-center">Loading profile...</p>
           ) : admin ? (
-            <div className="space-y-3">
+            <div className="space-y-4 text-gray-800 dark:text-gray-200">
               <p>
-                <strong>Name:</strong> {admin.name}
+                <strong>Name:</strong>{" "}
+                {admin.name ? admin.name : "Not available"}
               </p>
               <p>
-                <strong>Email:</strong> {admin.email}
+                <strong>Email:</strong>{" "}
+                {admin.email ? admin.email : "Not available"}
               </p>
               <p>
                 <strong>Role:</strong>{" "}
-                <span className="capitalize">{admin.role}</span>
+                <span className="capitalize">
+                  {admin.role ? admin.role : "N/A"}
+                </span>
               </p>
               <p>
                 <strong>Joined:</strong>{" "}
-                {new Date(admin.createdAt).toLocaleDateString()}
+                {admin.createdAt
+                  ? new Date(admin.createdAt).toLocaleDateString()
+                  : "Unknown"}
               </p>
             </div>
           ) : (
-            <p className="text-gray-500">No profile data found</p>
+            <p className="text-gray-500 text-center">No profile data found</p>
           )}
         </div>
       </div>
@@ -59,3 +76,4 @@ const AdminProfile = () => {
 };
 
 export default AdminProfile;
+
