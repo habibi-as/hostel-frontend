@@ -1,17 +1,20 @@
+// src/contexts/AuthContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import API from "../utils/api"; // centralized axios instance
+import API from "../utils/api";
 
 const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem("user");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [token, setToken] = useState(localStorage.getItem("token") || null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Auto-login if token exists
+  // ✅ Verify token on initial load only if not already verified
   useEffect(() => {
     const verifyUser = async () => {
       if (!token) {
@@ -20,21 +23,17 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        // ✅ Correct endpoint (no extra /api)
-        const res = await API.get("/auth/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
+        const res = await API.get("/auth/profile");
         if (res.data?.success && res.data.user) {
           setUser(res.data.user);
           API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         } else {
-          console.warn("No user found in /auth/profile response");
-          logout();
+          console.warn("⚠️ Invalid auth response, logging out");
+          handleLogout(false);
         }
       } catch (err) {
-        console.warn("Auth check failed:", err?.response?.data || err.message);
-        logout();
+        console.warn("Auth verify error:", err?.response?.data || err.message);
+        handleLogout(false);
       } finally {
         setLoading(false);
       }
@@ -43,28 +42,30 @@ export const AuthProvider = ({ children }) => {
     verifyUser();
   }, [token]);
 
-  // ✅ Login
+  // ✅ Login function
   const login = async (email, password) => {
     try {
       setLoading(true);
-
-      // ✅ FIXED: removed the extra /api
       const res = await API.post("/auth/login", { email, password });
 
-      if (res.data.success) {
+      if (res.data?.success) {
         const { token: jwt, user: userData } = res.data;
+
+        // Store credentials
         setUser(userData);
         setToken(jwt);
         localStorage.setItem("token", jwt);
         localStorage.setItem("user", JSON.stringify(userData));
         API.defaults.headers.common["Authorization"] = `Bearer ${jwt}`;
-        toast.success(`${userData.role} login successful!`);
+
+        toast.success(`${userData.role.toUpperCase()} login successful`);
         return { success: true, user: userData };
       } else {
-        toast.error(res.data.message || "Login failed");
+        toast.error(res.data?.message || "Invalid credentials");
         return { success: false };
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast.error(error.response?.data?.message || "Login failed");
       return { success: false };
     } finally {
@@ -72,31 +73,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ Logout
-  const logout = () => {
+  // ✅ Centralized logout handler
+  const handleLogout = (showToast = true) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     delete API.defaults.headers.common["Authorization"];
+    if (showToast) toast("Logged out successfully");
   };
+
+  // ✅ Role utilities
+  const isAuthenticated = !!user && !!token;
+  const isAdmin = user?.role === "admin";
+  const isStudent = user?.role === "student";
+  const isWarden = user?.role === "warden";
 
   const value = {
     user,
     token,
     loading,
     login,
-    logout,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === "admin",
-    isStudent: user?.role === "student",
-    isWarden: user?.role === "warden",
+    logout: handleLogout,
+    isAuthenticated,
+    isAdmin,
+    isStudent,
+    isWarden,
   };
 
-  // ✅ Prevent flicker during auth check
+  // ✅ Avoid flicker during verification
   if (loading)
     return (
-      <div className="text-center p-10 text-lg">
+      <div className="flex items-center justify-center min-h-screen text-gray-700 dark:text-gray-300">
         Checking authentication...
       </div>
     );
