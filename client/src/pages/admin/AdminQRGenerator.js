@@ -19,20 +19,27 @@ const AdminQRGenerator = () => {
     fetchStudents();
   }, []);
 
+  // ✅ Fetch all students (only with role=student)
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const res = await API.get("/api/users?role=student");
-      setStudents(res.data.data.users);
+      // ✅ FIXED: removed duplicate `/api`
+      const res = await API.get("/users?role=student");
+
+      if (res.data?.success && res.data?.data?.users) {
+        setStudents(res.data.data.users);
+      } else {
+        toast.error(res.data?.message || "Failed to fetch student list");
+      }
     } catch (err) {
-      console.error("Fetch students error:", err);
-      toast.error("Failed to load students");
+      console.error("❌ Fetch students error:", err);
+      toast.error(err.response?.data?.message || "Failed to load students");
     } finally {
       setLoading(false);
     }
   };
 
-  // 🧠 Generate QR data
+  // 🧠 Generate encoded QR data
   const handleGenerate = () => {
     if (!selectedStudent) {
       toast.error("Please select a student first");
@@ -41,27 +48,32 @@ const AdminQRGenerator = () => {
 
     const payload = {
       studentId: selectedStudent,
-      date: new Date(date),
-      issuedBy: user?.name,
+      date: new Date(date).toISOString(),
+      issuedBy: user?.name || "Admin",
     };
 
     const encoded = btoa(JSON.stringify(payload));
     setQrData(encoded);
-    toast.success("QR generated successfully!");
+    toast.success("✅ QR generated successfully!");
   };
 
-  // 📸 Download QR as image
+  // 📸 Download QR as PNG image
   const handleDownload = () => {
-    const canvas = document.getElementById("qrCanvas");
-    const pngUrl = canvas
-      .toDataURL("image/png")
-      .replace("image/png", "image/octet-stream");
-    const downloadLink = document.createElement("a");
-    downloadLink.href = pngUrl;
-    downloadLink.download = `attendance_qr_${date}.png`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
+    try {
+      const canvas = document.getElementById("qrCanvas");
+      const pngUrl = canvas
+        .toDataURL("image/png")
+        .replace("image/png", "image/octet-stream");
+      const downloadLink = document.createElement("a");
+      downloadLink.href = pngUrl;
+      downloadLink.download = `attendance_qr_${date}.png`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    } catch (err) {
+      console.error("❌ QR download error:", err);
+      toast.error("Failed to download QR");
+    }
   };
 
   if (loading) {
@@ -85,13 +97,14 @@ const AdminQRGenerator = () => {
           </h1>
         </div>
 
-        {/* Selection */}
+        {/* Selection Section */}
         <div className="card">
           <div className="card-header">
             <h3 className="card-title">Generate QR Code for a Student</h3>
           </div>
           <div className="card-content space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Student Dropdown */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   Select Student
@@ -102,14 +115,19 @@ const AdminQRGenerator = () => {
                   className="input w-full"
                 >
                   <option value="">-- Select Student --</option>
-                  {students.map((s) => (
-                    <option key={s._id} value={s._id}>
-                      {s.name} ({s.email})
-                    </option>
-                  ))}
+                  {students.length > 0 ? (
+                    students.map((s) => (
+                      <option key={s._id} value={s._id}>
+                        {s.name} ({s.email})
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>No students found</option>
+                  )}
                 </select>
               </div>
 
+              {/* Date Input */}
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   Date
@@ -123,13 +141,16 @@ const AdminQRGenerator = () => {
               </div>
             </div>
 
-            <button onClick={handleGenerate} className="btn btn-primary mt-4">
+            <button
+              onClick={handleGenerate}
+              className="btn bg-blue-600 text-white hover:bg-blue-700 mt-4"
+            >
               Generate QR
             </button>
           </div>
         </div>
 
-        {/* QR Preview */}
+        {/* QR Preview Section */}
         {qrData && (
           <div className="card text-center">
             <div className="card-header">
