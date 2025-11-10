@@ -11,35 +11,69 @@ const VisitorsPage = () => {
     purpose: "",
     remarks: "",
   });
+  const [loading, setLoading] = useState(false);
 
+  // ✅ Fetch visitors list
   const fetchVisitors = async () => {
     try {
-      const res = await API.get("/api/visitors");
-      setVisitors(res.data.data || []);
-    } catch {
-      toast.error("Failed to load visitors");
+      setLoading(true);
+      // ✅ FIXED: removed duplicate /api
+      const res = await API.get("/visitors");
+
+      if (res.data?.success && Array.isArray(res.data?.data)) {
+        setVisitors(res.data.data);
+      } else {
+        toast.error(res.data?.message || "Unexpected response format");
+      }
+    } catch (err) {
+      console.error("❌ Fetch visitors error:", err);
+      toast.error(err.response?.data?.message || "Failed to load visitors");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // ✅ Add a new visitor
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await API.post("/api/visitors", form);
-      toast.success("Visitor added");
-      setForm({ name: "", contact: "", purpose: "", remarks: "" });
-      fetchVisitors();
-    } catch {
-      toast.error("Failed to add visitor");
+      setLoading(true);
+      // ✅ FIXED: removed duplicate /api
+      const res = await API.post("/visitors", form);
+
+      if (res.data?.success) {
+        toast.success("Visitor added successfully!");
+        setForm({ name: "", contact: "", purpose: "", remarks: "" });
+        fetchVisitors();
+      } else {
+        toast.error(res.data?.message || "Failed to add visitor");
+      }
+    } catch (err) {
+      console.error("❌ Add visitor error:", err);
+      toast.error(err.response?.data?.message || "Failed to add visitor");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // ✅ Handle checkout action
   const handleCheckout = async (id) => {
     try {
-      await API.put(`/api/visitors/${id}/checkout`);
-      toast.success("Visitor checked out");
-      fetchVisitors();
-    } catch {
-      toast.error("Failed to checkout visitor");
+      setLoading(true);
+      // ✅ FIXED: removed duplicate /api
+      const res = await API.put(`/visitors/${id}/checkout`);
+
+      if (res.data?.success) {
+        toast.success("Visitor checked out successfully!");
+        fetchVisitors();
+      } else {
+        toast.error(res.data?.message || "Failed to checkout visitor");
+      }
+    } catch (err) {
+      console.error("❌ Checkout error:", err);
+      toast.error(err.response?.data?.message || "Failed to checkout visitor");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,7 +84,10 @@ const VisitorsPage = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Visitor Management</h1>
+        {/* Title */}
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Visitor Management
+        </h1>
 
         {/* Add Visitor Form */}
         <form
@@ -90,45 +127,63 @@ const VisitorsPage = () => {
           />
           <button
             type="submit"
-            className="btn bg-blue-600 text-white hover:bg-blue-700 md:col-span-4"
+            disabled={loading}
+            className={`btn bg-blue-600 text-white hover:bg-blue-700 md:col-span-4 ${
+              loading && "opacity-70 cursor-not-allowed"
+            }`}
           >
-            Add Visitor
+            {loading ? "Processing..." : "Add Visitor"}
           </button>
         </form>
 
-        {/* Visitor List */}
+        {/* Visitor Table */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 overflow-x-auto">
-          {visitors.length === 0 ? (
-            <p className="text-gray-500">No visitors yet</p>
+          {loading ? (
+            <p className="text-gray-500 text-center">Loading visitors...</p>
+          ) : visitors.length === 0 ? (
+            <p className="text-gray-500 text-center">No visitors yet</p>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full text-sm text-gray-800 dark:text-gray-300">
               <thead>
-                <tr className="border-b dark:border-gray-700 text-left">
+                <tr className="border-b dark:border-gray-700 text-left bg-gray-100 dark:bg-gray-900">
                   <th className="p-2">Name</th>
                   <th className="p-2">Contact</th>
                   <th className="p-2">Purpose</th>
                   <th className="p-2">Status</th>
                   <th className="p-2">Check In</th>
                   <th className="p-2">Check Out</th>
-                  <th className="p-2">Action</th>
+                  <th className="p-2 text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {visitors.map((v) => (
-                  <tr key={v._id} className="border-b dark:border-gray-700">
+                  <tr
+                    key={v._id}
+                    className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
+                  >
                     <td className="p-2">{v.name}</td>
                     <td className="p-2">{v.contact}</td>
                     <td className="p-2">{v.purpose}</td>
-                    <td className="p-2 capitalize">{v.status}</td>
+                    <td
+                      className={`p-2 font-semibold ${
+                        v.status === "checked_out"
+                          ? "text-green-600"
+                          : "text-yellow-600"
+                      }`}
+                    >
+                      {v.status}
+                    </td>
                     <td className="p-2">
-                      {new Date(v.checkInTime).toLocaleString()}
+                      {v.checkInTime
+                        ? new Date(v.checkInTime).toLocaleString()
+                        : "—"}
                     </td>
                     <td className="p-2">
                       {v.checkOutTime
                         ? new Date(v.checkOutTime).toLocaleString()
                         : "—"}
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 text-center">
                       {v.status !== "checked_out" && (
                         <button
                           onClick={() => handleCheckout(v._id)}
