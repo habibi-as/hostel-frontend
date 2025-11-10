@@ -13,29 +13,43 @@ const AdminLostFound = () => {
     location: "",
   });
 
-  // 🔹 Fetch Lost & Found data
+  // ✅ Fetch all lost & found records
   const fetchItems = async () => {
     try {
-      const res = await API.get("/api/lost-found");
-      setItems(res.data.data || []);
+      setLoading(true);
+      // ✅ FIXED: removed duplicate `/api`
+      const res = await API.get("/lost-found");
+
+      if (res.data?.success) {
+        setItems(res.data.data || []);
+      } else {
+        toast.error(res.data?.message || "Failed to fetch lost & found data");
+      }
     } catch (err) {
-      toast.error("Failed to load items");
-      console.error(err);
+      console.error("❌ Fetch lost-found error:", err);
+      toast.error(err.response?.data?.message || "Failed to load items");
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔹 Handle new submission
+  // ✅ Handle new item submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await API.post("/api/lost-found", form);
-      toast.success("Item added!");
-      setForm({ itemName: "", description: "", status: "lost", location: "" });
-      fetchItems();
+      // ✅ FIXED: removed duplicate `/api`
+      const res = await API.post("/lost-found", form);
+
+      if (res.data?.success) {
+        toast.success("✅ Item added successfully!");
+        setForm({ itemName: "", description: "", status: "lost", location: "" });
+        fetchItems();
+      } else {
+        toast.error(res.data?.message || "Failed to add item");
+      }
     } catch (err) {
-      toast.error("Failed to add item");
+      console.error("❌ Add item error:", err);
+      toast.error(err.response?.data?.message || "Failed to add item");
     }
   };
 
@@ -46,11 +60,12 @@ const AdminLostFound = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
+        {/* Title */}
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Lost & Found Management
         </h1>
 
-        {/* Add new item */}
+        {/* Add New Item Form */}
         <form
           onSubmit={handleSubmit}
           className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow"
@@ -86,23 +101,22 @@ const AdminLostFound = () => {
               Add Item
             </button>
           </div>
+
           <textarea
             rows="2"
             placeholder="Description"
             value={form.description}
-            onChange={(e) =>
-              setForm({ ...form, description: e.target.value })
-            }
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
             className="mt-2 input"
           ></textarea>
         </form>
 
-        {/* Display table */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        {/* Display Items Table */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 overflow-x-auto">
           {loading ? (
-            <p>Loading...</p>
+            <p className="text-gray-500 text-center">Loading records...</p>
           ) : items.length === 0 ? (
-            <p className="text-gray-500">No records found</p>
+            <p className="text-gray-500 text-center">No records found</p>
           ) : (
             <table className="w-full text-sm text-gray-700 dark:text-gray-300">
               <thead>
@@ -120,12 +134,22 @@ const AdminLostFound = () => {
                     key={item._id}
                     className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
                   >
-                    <td className="p-2">{item.itemName}</td>
-                    <td className="p-2 capitalize">{item.status}</td>
-                    <td className="p-2">{item.location}</td>
-                    <td className="p-2">{item.description}</td>
+                    <td className="p-2">{item.itemName || "—"}</td>
+                    <td
+                      className={`p-2 capitalize font-semibold ${
+                        item.status === "found"
+                          ? "text-green-600"
+                          : "text-yellow-600"
+                      }`}
+                    >
+                      {item.status || "—"}
+                    </td>
+                    <td className="p-2">{item.location || "—"}</td>
+                    <td className="p-2">{item.description || "—"}</td>
                     <td className="p-2">
-                      {new Date(item.createdAt).toLocaleDateString()}
+                      {item.createdAt
+                        ? new Date(item.createdAt).toLocaleDateString()
+                        : "—"}
                     </td>
                   </tr>
                 ))}
@@ -139,3 +163,4 @@ const AdminLostFound = () => {
 };
 
 export default AdminLostFound;
+
