@@ -1,20 +1,17 @@
-// src/contexts/AuthContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import API from "../utils/api";
+import API from "../utils/api"; // centralized axios instance
 
 const AuthContext = createContext();
+
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("user");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Verify token on initial load only if not already verified
+  // ✅ Auto-login if token exists
   useEffect(() => {
     const verifyUser = async () => {
       if (!token) {
@@ -23,17 +20,19 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const res = await API.get("/auth/profile");
+        const res = await API.get("/auth/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
         if (res.data?.success && res.data.user) {
           setUser(res.data.user);
           API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         } else {
-          console.warn("⚠️ Invalid auth response, logging out");
-          handleLogout(false);
+          logout();
         }
       } catch (err) {
-        console.warn("Auth verify error:", err?.response?.data || err.message);
-        handleLogout(false);
+        console.warn("Auth check failed:", err?.response?.data || err.message);
+        logout();
       } finally {
         setLoading(false);
       }
@@ -42,30 +41,26 @@ export const AuthProvider = ({ children }) => {
     verifyUser();
   }, [token]);
 
-  // ✅ Login function
+  // ✅ Login
   const login = async (email, password) => {
     try {
       setLoading(true);
       const res = await API.post("/auth/login", { email, password });
 
-      if (res.data?.success) {
+      if (res.data.success) {
         const { token: jwt, user: userData } = res.data;
-
-        // Store credentials
         setUser(userData);
         setToken(jwt);
         localStorage.setItem("token", jwt);
         localStorage.setItem("user", JSON.stringify(userData));
         API.defaults.headers.common["Authorization"] = `Bearer ${jwt}`;
-
-        toast.success(`${userData.role.toUpperCase()} login successful`);
+        toast.success(`${userData.role} login successful!`);
         return { success: true, user: userData };
       } else {
-        toast.error(res.data?.message || "Invalid credentials");
+        toast.error(res.data.message || "Login failed");
         return { success: false };
       }
     } catch (error) {
-      console.error("Login error:", error);
       toast.error(error.response?.data?.message || "Login failed");
       return { success: false };
     } finally {
@@ -73,41 +68,60 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ Centralized logout handler
-  const handleLogout = (showToast = true) => {
+  // ✅ Register
+  const register = async (formData) => {
+    try {
+      setLoading(true);
+      const res = await API.post("/auth/register", formData);
+
+      if (res.data.success) {
+        toast.success("Registration successful!");
+        return { success: true, message: "Registered successfully" };
+      } else {
+        toast.error(res.data.message || "Registration failed");
+        return { success: false, message: res.data.message };
+      }
+    } catch (error) {
+      console.error("Register error:", error);
+      toast.error(error.response?.data?.message || "Registration failed");
+      return { success: false, message: "Registration failed" };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Logout
+  const logout = () => {
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     delete API.defaults.headers.common["Authorization"];
-    if (showToast) toast("Logged out successfully");
   };
-
-  // ✅ Role utilities
-  const isAuthenticated = !!user && !!token;
-  const isAdmin = user?.role === "admin";
-  const isStudent = user?.role === "student";
-  const isWarden = user?.role === "warden";
 
   const value = {
     user,
     token,
     loading,
     login,
-    logout: handleLogout,
-    isAuthenticated,
-    isAdmin,
-    isStudent,
-    isWarden,
+    logout,
+    register, // ✅ now included
+    isAuthenticated: !!user,
+    isAdmin: user?.role === "admin",
+    isStudent: user?.role === "student",
+    isWarden: user?.role === "warden",
   };
 
-  // ✅ Avoid flicker during verification
   if (loading)
     return (
-      <div className="flex items-center justify-center min-h-screen text-gray-700 dark:text-gray-300">
+      <div className="text-center p-10 text-lg">
         Checking authentication...
       </div>
     );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
