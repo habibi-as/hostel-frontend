@@ -1,47 +1,56 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // ✅ keep only useNavigate
-import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import AdminSidebar from './AdminSidebar';
-import AdminNavbar from './AdminNavbar';
+// src/components/admin/AdminLayout.js
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
+import AdminSidebar from "./AdminSidebar";
+import AdminNavbar from "./AdminNavbar";
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
   const { darkMode } = useTheme();
-  const navigate = useNavigate(); // ✅ keep navigate only
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+    <div
+      className={`min-h-screen transition-colors duration-300 ${
+        darkMode ? "dark bg-gray-900 text-gray-100" : "bg-gray-50 text-gray-900"
+      }`}
+    >
+      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
-        >
-          <div className="absolute inset-0 bg-gray-600 opacity-75"></div>
-        </div>
+          aria-label="Close sidebar overlay"
+        />
       )}
 
-      <div
+      {/* Sidebar */}
+      <aside
         className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <AdminSidebar onClose={() => setSidebarOpen(false)} />
-      </div>
+      </aside>
 
-      <div className="lg:ml-64 flex flex-col min-h-screen">
+      {/* Main content */}
+      <div className="flex flex-col min-h-screen lg:ml-64">
         <AdminNavbar
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
           user={user}
           onLogout={handleLogout}
         />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6 overflow-y-auto bg-transparent">
+          {children}
+        </main>
       </div>
     </div>
   );
