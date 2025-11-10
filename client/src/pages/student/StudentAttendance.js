@@ -3,7 +3,7 @@ import StudentLayout from "../../components/student/StudentLayout";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { useAuth } from "../../contexts/AuthContext";
 import API from "../../utils/api";
-import QrReader from 'react-qr-scanner';
+import QrReader from "react-qr-scanner";
 import toast from "react-hot-toast";
 import { FaQrcode, FaCalendarCheck, FaChartLine } from "react-icons/fa";
 
@@ -13,19 +13,24 @@ const StudentAttendance = () => {
   const [percentage, setPercentage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showScanner, setShowScanner] = useState(false);
+  const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
-    fetchAttendance();
-  }, []);
+    if (user?._id || user?.id) fetchAttendance();
+  }, [user]);
 
   // ✅ Fetch attendance records from backend
   const fetchAttendance = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`/api/attendance/student/${user.id}`);
-      if (res.data.success) {
-        setAttendance(res.data.data.records);
-        setPercentage(res.data.data.attendancePercentage);
+      // ✅ FIXED: removed duplicate /api
+      const res = await API.get(`/attendance/student/${user?.id || user?._id}`);
+
+      if (res.data?.success) {
+        setAttendance(res.data.data.records || []);
+        setPercentage(res.data.data.attendancePercentage || 0);
+      } else {
+        toast.error(res.data?.message || "Failed to load attendance data");
       }
     } catch (err) {
       console.error("Fetch attendance error:", err);
@@ -37,24 +42,28 @@ const StudentAttendance = () => {
 
   // ✅ Handle QR Scan result
   const handleScan = async (data) => {
-    if (data) {
+    if (data && !scanning) {
+      setScanning(true);
       try {
-        // Encode QR as base64 payload
         const qrCode = btoa(
-          JSON.stringify({ studentId: user.id, date: new Date() })
+          JSON.stringify({ studentId: user?.id || user?._id, date: new Date() })
         );
 
-        const res = await API.post("/api/attendance/mark", { qrCode });
-        if (res.data.success) {
-          toast.success(res.data.message);
+        // ✅ FIXED: removed duplicate /api
+        const res = await API.post("/attendance/mark", { qrCode });
+
+        if (res.data?.success) {
+          toast.success(res.data.message || "Attendance marked!");
           setShowScanner(false);
           fetchAttendance();
         } else {
-          toast.error(res.data.message || "Failed to mark attendance");
+          toast.error(res.data?.message || "Failed to mark attendance");
         }
       } catch (error) {
         console.error("QR mark error:", error);
         toast.error("QR marking failed");
+      } finally {
+        setTimeout(() => setScanning(false), 2000); // prevents rapid re-scans
       }
     }
   };
@@ -75,7 +84,7 @@ const StudentAttendance = () => {
           </h1>
         </div>
 
-        {/* Overview */}
+        {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="card text-center">
             <div className="card-content py-6">
@@ -114,7 +123,7 @@ const StudentAttendance = () => {
           </div>
         </div>
 
-        {/* QR Section */}
+        {/* QR Scanner Section */}
         <div className="text-center mt-6">
           {!showScanner ? (
             <button
@@ -152,9 +161,9 @@ const StudentAttendance = () => {
               <h3 className="card-title">Recent Attendance</h3>
             </div>
             <div className="overflow-x-auto">
-              <table className="table-auto w-full text-left">
+              <table className="table-auto w-full text-left text-gray-800 dark:text-gray-300">
                 <thead>
-                  <tr className="bg-gray-100 dark:bg-gray-800">
+                  <tr className="bg-gray-100 dark:bg-gray-900">
                     <th className="px-4 py-2">Date</th>
                     <th className="px-4 py-2">Status</th>
                     <th className="px-4 py-2">Check-In</th>
@@ -163,8 +172,11 @@ const StudentAttendance = () => {
                 </thead>
                 <tbody>
                   {attendance.map((a) => (
-                    <tr key={a._id} className="border-b border-gray-200 dark:border-gray-700">
-                      <td className="px-4 py-2 text-gray-800 dark:text-gray-300">
+                    <tr
+                      key={a._id}
+                      className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900 transition"
+                    >
+                      <td className="px-4 py-2">
                         {new Date(a.date).toLocaleDateString()}
                       </td>
                       <td
@@ -176,12 +188,8 @@ const StudentAttendance = () => {
                       >
                         {a.status}
                       </td>
-                      <td className="px-4 py-2 text-gray-700 dark:text-gray-400">
-                        {a.checkIn || "—"}
-                      </td>
-                      <td className="px-4 py-2 text-gray-700 dark:text-gray-400">
-                        {a.method || "Manual"}
-                      </td>
+                      <td className="px-4 py-2">{a.checkIn || "—"}</td>
+                      <td className="px-4 py-2">{a.method || "QR"}</td>
                     </tr>
                   ))}
                 </tbody>
