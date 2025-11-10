@@ -55,16 +55,16 @@ const LandingPage = () => {
       name: "prachi",
       batch: "2024 Batch",
       rating: 5,
-      comment: "Excellent facilities and great management. The hostel provides everything a student needs."
+      comment: "I love you ."
     },
     {
-      name: "Priya Sharma",
-      batch: "2022 Batch",
+      name: "Shraddha",
+      batch: "2023 Batch",
       rating: 5,
       comment: "Clean rooms, good food, and helpful staff. Highly recommended for students."
     },
     {
-      name: "Amit Singh",
+      name: "Aafrin",
       batch: "2023 Batch",
       rating: 5,
       comment: "The hostel management system is very efficient. Everything is digital and easy to use."
