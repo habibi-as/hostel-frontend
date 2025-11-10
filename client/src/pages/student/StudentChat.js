@@ -3,7 +3,12 @@ import { useAuth } from "../../contexts/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import API from "../../utils/api";
-import { FaExclamationTriangle, FaPaperPlane, FaPlusCircle } from "react-icons/fa";
+import toast from "react-hot-toast";
+import {
+  FaExclamationTriangle,
+  FaPaperPlane,
+  FaPlusCircle,
+} from "react-icons/fa";
 
 const StudentComplaints = () => {
   const { user } = useAuth();
@@ -29,18 +34,27 @@ const StudentComplaints = () => {
     fetchComplaints();
   }, []);
 
+  // ✅ Fetch student complaints
   const fetchComplaints = async () => {
     try {
       setLoading(true);
-      const res = await API.get("/api/complaints");
-      if (res.data.success) setComplaints(res.data.data);
+      // ✅ FIXED: removed duplicate /api
+      const res = await API.get("/complaints");
+
+      if (res.data?.success) {
+        setComplaints(res.data.data || []);
+      } else {
+        toast.error(res.data?.message || "Failed to load complaints");
+      }
     } catch (err) {
-      console.error("Fetch complaints error:", err);
+      console.error("❌ Fetch complaints error:", err);
+      toast.error("Error fetching complaints");
     } finally {
       setLoading(false);
     }
   };
 
+  // ✅ Handle form change
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     setForm({
@@ -49,25 +63,37 @@ const StudentComplaints = () => {
     });
   };
 
+  // ✅ Submit new complaint
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!form.category || !form.description.trim()) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("category", form.category);
       formData.append("description", form.description);
       if (form.image) formData.append("image", form.image);
 
-      const res = await API.post("/api/complaints", formData, {
+      // ✅ FIXED: removed duplicate /api
+      const res = await API.post("/complaints", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      if (res.data.success) {
+      if (res.data?.success) {
+        toast.success("Complaint submitted successfully!");
         setForm({ category: "", description: "", image: null });
         setShowForm(false);
         fetchComplaints();
+      } else {
+        toast.error(res.data?.message || "Failed to submit complaint");
       }
     } catch (err) {
-      console.error("Submit complaint error:", err);
+      console.error("❌ Submit complaint error:", err);
+      toast.error("Error submitting complaint");
     }
   };
 
@@ -156,7 +182,7 @@ const StudentComplaints = () => {
           </form>
         )}
 
-        {/* Complaints List */}
+        {/* Complaints Table */}
         <div className="card p-4">
           {loading ? (
             <div className="flex justify-center py-10">
@@ -187,7 +213,10 @@ const StudentComplaints = () => {
                 </thead>
                 <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                   {complaints.map((c) => (
-                    <tr key={c._id}>
+                    <tr
+                      key={c._id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                    >
                       <td className="px-4 py-3 capitalize text-gray-800 dark:text-gray-100">
                         {c.category}
                       </td>
