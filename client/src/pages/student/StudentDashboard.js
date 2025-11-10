@@ -10,7 +10,6 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 import API from "../../utils/api";
 import toast from "react-hot-toast";
 import {
-  FaBed,
   FaDollarSign,
   FaChartLine,
   FaQrcode,
@@ -30,17 +29,21 @@ const StudentDashboard = () => {
     fetchDashboardData();
   }, []);
 
+  // ✅ Fetch Student Dashboard Stats
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      // ✅ Fixed: Removed duplicate `/api`
+      const res = await API.get("/student/dashboard/stats");
 
-      // ✅ Corrected endpoint
-      const response = await API.get("/student/dashboard/stats");
-
-      setStats(response.data.data);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      setError("Failed to load dashboard data");
+      if (res.data?.success) {
+        setStats(res.data.data);
+      } else {
+        throw new Error(res.data?.message || "Failed to load stats");
+      }
+    } catch (err) {
+      console.error("❌ Error fetching dashboard data:", err);
+      setError("Failed to load your dashboard data");
       toast.error("Unable to fetch your dashboard data");
     } finally {
       setLoading(false);
@@ -60,13 +63,11 @@ const StudentDashboard = () => {
   if (error) {
     return (
       <StudentLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">{error}</p>
-            <button onClick={fetchDashboardData} className="btn btn-primary">
-              Retry
-            </button>
-          </div>
+        <div className="flex flex-col items-center justify-center h-64 text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <button onClick={fetchDashboardData} className="btn btn-primary">
+            Retry
+          </button>
         </div>
       </StudentLayout>
     );
@@ -107,20 +108,18 @@ const StudentDashboard = () => {
     <StudentLayout>
       <div className="space-y-6">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-primary-600 to-gold-600 rounded-lg p-6 text-white">
+        <div className="bg-gradient-to-r from-primary-600 to-gold-600 rounded-lg p-6 text-white shadow">
           <h1 className="text-3xl font-bold mb-2">
-            Welcome, {user?.name}!
+            Welcome, {user?.name || "Student"}!
           </h1>
-          <p className="text-primary-100">
-            Here’s your live hostel overview.
-          </p>
+          <p className="text-primary-100">Here’s your live hostel overview.</p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {statsCards.map((card, index) => (
+          {statsCards.map((card, i) => (
             <StatsCard
-              key={index}
+              key={i}
               title={card.title}
               value={card.value}
               icon={card.icon}
@@ -130,60 +129,55 @@ const StudentDashboard = () => {
           ))}
         </div>
 
-        {/* Main Content */}
+        {/* Main Grid: Attendance Chart + Side Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Attendance Chart */}
           <div className="lg:col-span-2">
             <AttendanceChart
               attendancePercentage={stats?.attendancePercentage || 0}
             />
           </div>
-
-          {/* Quick Actions & Notices */}
           <div className="space-y-6">
             <QuickActions />
             <RecentNotices />
           </div>
         </div>
 
-        {/* Additional Info */}
+        {/* Extra Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Today's Menu */}
-          <div className="card">
+          <div className="card dark:bg-gray-800">
             <div className="card-header">
               <h3 className="card-title flex items-center">
                 <FaUtensils className="mr-2 text-primary-600" />
                 Today's Menu
               </h3>
             </div>
-            <div className="card-content">
-              <div className="space-y-3">
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    Breakfast
-                  </h4>
-                  <p className="text-sm text-gray-500">Idli, Sambar, Coffee</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    Lunch
-                  </h4>
-                  <p className="text-sm text-gray-500">
-                    Rice, Dal, Curd, Vegetables
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    Dinner
-                  </h4>
-                  <p className="text-sm text-gray-500">Roti, Curry, Salad</p>
-                </div>
+            <div className="card-content space-y-3">
+              <div>
+                <h4 className="font-semibold text-gray-900 dark:text-white">
+                  Breakfast
+                </h4>
+                <p className="text-sm text-gray-500">Idli, Sambar, Coffee</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 dark:text-white">
+                  Lunch
+                </h4>
+                <p className="text-sm text-gray-500">
+                  Rice, Dal, Curd, Vegetables
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 dark:text-white">
+                  Dinner
+                </h4>
+                <p className="text-sm text-gray-500">Roti, Curry, Salad</p>
               </div>
             </div>
           </div>
 
           {/* Quick Chat */}
-          <div className="card">
+          <div className="card dark:bg-gray-800">
             <div className="card-header">
               <h3 className="card-title flex items-center">
                 <FaComments className="mr-2 text-primary-600" />
@@ -192,14 +186,14 @@ const StudentDashboard = () => {
             </div>
             <div className="card-content">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Connect with your hostel mates
+                Connect with your hostel mates instantly.
               </p>
               <button className="btn btn-primary w-full">Open Chat</button>
             </div>
           </div>
 
           {/* QR Attendance */}
-          <div className="card">
+          <div className="card dark:bg-gray-800">
             <div className="card-header">
               <h3 className="card-title flex items-center">
                 <FaQrcode className="mr-2 text-primary-600" />
@@ -208,7 +202,7 @@ const StudentDashboard = () => {
             </div>
             <div className="card-content">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Mark your attendance using QR code
+                Mark your attendance using QR code.
               </p>
               <button className="btn btn-outline w-full">Generate QR</button>
             </div>
