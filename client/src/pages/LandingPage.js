@@ -55,7 +55,7 @@ const LandingPage = () => {
       name: "prachi",
       batch: "2024 Batch",
       rating: 5,
-      comment: "I love you ."
+      comment: "I love you , i am high on you."
     },
     {
       name: "Shraddha",
