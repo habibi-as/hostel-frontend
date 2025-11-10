@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import API from "../utils/api"; // centralized axios instance
+import API from "../utils/api";
 
 const AuthContext = createContext();
 
@@ -8,10 +8,24 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token") || null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Auto-login if token exists
+  // ✅ Restore token & user from localStorage
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
+      API.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
+    }
+
+    setLoading(false);
+  }, []);
+
+  // ✅ Verify token if present
   useEffect(() => {
     const verifyUser = async () => {
       if (!token) {
@@ -20,13 +34,9 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const res = await API.get("/auth/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
+        const res = await API.get("/auth/profile");
         if (res.data?.success && res.data.user) {
           setUser(res.data.user);
-          API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         } else {
           logout();
         }
@@ -41,7 +51,7 @@ export const AuthProvider = ({ children }) => {
     verifyUser();
   }, [token]);
 
-  // ✅ Login
+  // ✅ Login function
   const login = async (email, password) => {
     try {
       setLoading(true);
@@ -68,7 +78,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ Register
+  // ✅ Register function
   const register = async (formData) => {
     try {
       setLoading(true);
@@ -90,7 +100,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ✅ Logout
+  // ✅ Logout function
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -105,23 +115,21 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
-    register, // ✅ now included
+    register,
     isAuthenticated: !!user,
     isAdmin: user?.role === "admin",
     isStudent: user?.role === "student",
-    isWarden: user?.role === "warden",
   };
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="text-center p-10 text-lg">
+      <div className="text-center p-10 text-lg text-gray-600 dark:text-gray-300">
         Checking authentication...
       </div>
     );
+  }
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
 };
